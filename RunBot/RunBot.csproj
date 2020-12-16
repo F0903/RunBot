@@ -86,21 +86,21 @@
     <Compile Include="Program.cs" />
     <Compile Include="Bot.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="Services/Listening/IListener.cs" />
-    <Compile Include="Services/Listening/StandardListener.cs" />
-    <Compile Include="Services/Listening/ListeningModule.cs" />
-    <Compile Include="Services/Logging/IAsyncLogger.cs" />
-    <Compile Include="Services/Logging/StandardLogger.cs" />
-    <Compile Include="Services/Logging/LoggingModule.cs" />
-    <Compile Include="Services/VoiceRecognition/IVoiceRecognizer.cs" />
-    <Compile Include="Services/VoiceRecognition/AsyncVoiceRecognizer.cs" />
-    <Compile Include="Services/VoiceRecognition/VoiceRecognitionModule.cs" />
-    <Compile Include="IoC/Kernel.cs" />
-    <Compile Include="Commands/ListenCommands.cs" />
-    <Compile Include="Commands/MiscCommands.cs" />
-    <Compile Include="CommandHandlers/ICommandHandler.cs" />
-    <Compile Include="CommandHandlers/AsyncCommandHandler.cs" />
-    <Compile Include="CommandHandlers/CommandHandlersModule.cs" />
+    <Compile Include="Services\Listening\IListener.cs" />
+    <Compile Include="Services\Listening\StandardListener.cs" />
+    <Compile Include="Services\Listening\ListeningModule.cs" />
+    <Compile Include="Services\Logging\IAsyncLogger.cs" />
+    <Compile Include="Services\Logging\StandardLogger.cs" />
+    <Compile Include="Services\Logging\LoggingModule.cs" />
+    <Compile Include="Services\VoiceRecognition\IVoiceRecognizer.cs" />
+    <Compile Include="Services\VoiceRecognition\AsyncVoiceRecognizer.cs" />
+    <Compile Include="Services\VoiceRecognition\VoiceRecognitionModule.cs" />
+    <Compile Include="IoC\Kernel.cs" />
+    <Compile Include="Commands\ListenCommands.cs" />
+    <Compile Include="Commands\MiscCommands.cs" />
+    <Compile Include="CommandHandlers\ICommandHandler.cs" />
+    <Compile Include="CommandHandlers\AsyncCommandHandler.cs" />
+    <Compile Include="CommandHandlers\CommandHandlersModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
