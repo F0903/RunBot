@@ -11,8 +11,6 @@ namespace RunBot
     {
         static async Task Main()
         {
-            await new RunBot.Services.VoiceRecognition.AsyncVoiceRecognizer().RecognizeAsync(null, null);
-
             var bot = new Bot(new Discord.WebSocket.DiscordSocketConfig() 
             {
                 LogLevel = Discord.LogSeverity.Debug

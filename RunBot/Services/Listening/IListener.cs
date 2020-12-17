@@ -10,7 +10,7 @@ namespace RunBot.Services.Listening
 {
     public interface IListener
     {
-        void SetInputs(IEnumerable<AudioInStream> inputs);
+        void SetInputClient(IAudioClient input);
         Task ListenAsync(Action onRecognizedSpeech);
         void Stop();
     }

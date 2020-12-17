@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Discord.Audio;
+using Discord.Audio.Streams;
 
 using RunBot.Services.Listening;
 using RunBot.Services.VoiceRecognition;
@@ -15,35 +16,30 @@ namespace RunBot.Services
 {
     public class StandardListener : IListener
     {
-        public StandardListener(IVoiceRecognizer recognizer)
-        {
-            this.recognizer = recognizer;
-        }
-
-        readonly IVoiceRecognizer recognizer;
-
         bool listening = false;
 
-        IEnumerable<AudioInStream> inputs;
+        IAudioClient inputClient;
 
-        public void SetInputs(IEnumerable<AudioInStream> inputs) => this.inputs = inputs;
+        public void SetInputClient(IAudioClient input) => this.inputClient = input;
 
         public Task ListenAsync(Action onRecognizedSpeech)
         {
-            if (inputs == null)
-                throw new NullReferenceException("Inputs were null");
+            if (inputClient == null)
+                throw new NullReferenceException("Input was null");
             listening = true;
             while (listening)
             {
-                foreach (var stream in inputs)
+                var streams = inputClient.GetStreams().Values;
+                Parallel.ForEach(streams, stream => 
                 {
-                    if (stream.AvailableFrames > 1)
-                    {
-                        Thread.Sleep(50);
-                        continue;
-                    }
-                    recognizer.RecognizeAsync(stream, onRecognizedSpeech);
-                }
+                    //if (stream.AvailableFrames < 1)
+                    //{
+                    //    Thread.Sleep(50);
+                    //    return;
+                    //}
+                    var recognizer = new AsyncVoiceRecognizer();
+                    recognizer.RecognizeAsync((InputStream)stream, onRecognizedSpeech).Wait();
+                });
             }
             return Task.CompletedTask;
         }

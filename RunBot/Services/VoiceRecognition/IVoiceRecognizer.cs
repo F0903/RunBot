@@ -4,10 +4,14 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
+using Discord.Audio.Streams;
+
 namespace RunBot.Services.VoiceRecognition
 {
     public interface IVoiceRecognizer
     {
-        Task RecognizeAsync(Stream audio, Action onRecognized);
+        Task RecognizeAsync(InputStream audio, Action onRecognized);
+
+        void Stop();
     }
 }

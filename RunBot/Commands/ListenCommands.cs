@@ -32,8 +32,7 @@ namespace RunBot.Commands
 
             var voiceChannel = user.VoiceChannel;
             var audioClient = await voiceChannel.ConnectAsync();
-
-            listener.SetInputs(audioClient.GetStreams().Values);
+            listener.SetInputClient(audioClient);
             await listener.ListenAsync(() => ReplyAsync("I recognized 'run'!"));
         }
     }
