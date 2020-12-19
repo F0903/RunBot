@@ -56,34 +56,37 @@ namespace RunBot.Services.VoiceRecognition
 
         public Task RecognizeAsync(InputStream audio, Action OnRecognized)
         {
+            //TODO: Read more frames.
             using (var recognizer = new SpeechRecognitionEngine(culture))
-            using (audio)
             {
                 running = true;
-                while (running)
-                {
-                    var wrapper = new DiscordStreamWrapper(audio);
 
-                    var gb = new GrammarBuilder("run") { Culture = culture };
-                    recognizer.LoadGrammar(new Grammar(gb));
-                    recognizer.SetInputToAudioStream(wrapper, new SpeechAudioFormatInfo(48000, AudioBitsPerSample.Sixteen, AudioChannel.Stereo));
-                    recognizer.SpeechRecognized += (obj, args) =>
-                    {
-                        if (!running)
-                            return;
-                        if (args.Result.Confidence < ConfidenceThreshold)
-                            return;
-                        running = false;
-                        OnRecognized();
-                    };
-                    if (recognizer.Recognize() == null)
-                    {
-                        running = false;
-                        throw new Exception("Recognizer not supported.");
-                    }
-                }  
+                var wrapper = new DiscordStreamWrapper(audio);
+
+                var gb = new GrammarBuilder("run") { Culture = culture };
+                recognizer.LoadGrammar(new Grammar(gb));
+                recognizer.SetInputToAudioStream(wrapper, new SpeechAudioFormatInfo(48000, AudioBitsPerSample.Sixteen, AudioChannel.Stereo));
+                recognizer.SpeechRecognized += (obj, args) =>
+                {
+                    if (!running)
+                        return;
+                    if (args.Result.Confidence < ConfidenceThreshold)
+                        return;
+                    running = false;
+                    recognizer.RecognizeAsyncStop();
+                    OnRecognized();
+                };
+                recognizer.RecognizeAsync(RecognizeMode.Multiple);
+                //if (recognizer.Recognize() == null)
+                //{
+                //    running = false;
+                //    throw new Exception("Recognizer not supported.");
+                //}
+                bool finished = false;
+                recognizer.RecognizeCompleted += (obj, args) => finished = true;
+                while (!finished) { Thread.Sleep(100); }
+                return Task.CompletedTask;
             }
-            return Task.CompletedTask;
         }
 
         public void Stop() => running = false;
