@@ -18,16 +18,18 @@ namespace RunBot.Services
 {
     public class StandardListener : IListener
     {
-        public StandardListener(IAudioProvider audio)
+        //TODO: Fix strange error with Ninject when using IAudioProvider here.
+        public StandardListener(BasicAudioProvider audio)
         {
             this.audio = audio;
         }
 
         readonly IAudioProvider audio;
 
-        bool listening = false;
+        CancellationTokenSource cancellationTokenSource;
 
         IAudioClient inputClient;
+
 
         public void SetInputClient(IAudioClient input) => this.inputClient = input;
 
@@ -37,29 +39,25 @@ namespace RunBot.Services
             if (inputClient == null)
                 throw new NullReferenceException("Input was null");
 
-            audio.SetOutput(new ClientChannelPair(inputClient, null));
-            await audio.PlayFile("media/sniff.wav");
+            cancellationTokenSource = new CancellationTokenSource();
 
-            listening = true;
+            audio.SetOutput(inputClient);
+            await audio.PlaySilenceAsync(1); // Play audio so we can receive.
 
             var streams = inputClient.GetStreams().Values;
             Parallel.ForEach(streams, stream =>
             {
-                //if (stream.AvailableFrames < 1)
-                //{
-                //    Thread.Sleep(50);
-                //    return;
-                //}
                 var recognizer = new AsyncVoiceRecognizer();
-                recognizer.RecognizeAsync((InputStream)stream, onRecognizedSpeech).Wait();
+                recognizer.RecognizeAsync((InputStream)stream, cancellationTokenSource.Token, onRecognizedSpeech).Wait();
+                stream.Dispose();
             });
-            Console.Write("");
-            //while (listening)
-            //{
-
-            //}
         }
 
-        public void Stop() => listening = false;
+        public void Stop() 
+        { 
+            cancellationTokenSource?.Cancel();
+            inputClient?.StopAsync();
+            inputClient?.Dispose();
+        }
     }
 }

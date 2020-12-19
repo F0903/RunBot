@@ -39,7 +39,9 @@ namespace RunBot.CommandHandlers
                 result.IsSuccess ?
                 "Executed command successfully." :
                 $"Error in command: {result.ErrorReason}"));
+
             commands.AddModulesAsync(Assembly.GetExecutingAssembly(), serviceProvider);
+
             return Task.CompletedTask;
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
 using System.Speech.AudioFormat;
@@ -16,79 +17,43 @@ namespace RunBot.Services.VoiceRecognition
 {
     public class AsyncVoiceRecognizer : IVoiceRecognizer
     {
-        class DiscordStreamWrapper : Stream
-        {
-            public DiscordStreamWrapper(InputStream stream, long streamSize = 5 * 1024)
-            {
-                this.stream = stream;
-                this.streamSize = streamSize;
-            }
-
-            private readonly InputStream stream;
-
-            public override bool CanRead => true;
-
-            public override bool CanSeek => true;
-
-            public override bool CanWrite => true;
-
-            readonly long streamSize;
-            public override long Length => streamSize;
-
-            public override long Position { get => 0; set { } }
-
-            public override void Flush() { return; }
-            public override int Read(byte[] buffer, int offset, int count) //TODO: Fix the indefinite hang here.
-            {
-                var debugCount = stream.ReadAsync(buffer, offset, count, CancellationToken.None).Result;
-                return debugCount;
-            }
-            public override long Seek(long offset, SeekOrigin origin) => 0;
-            public override void SetLength(long value) { return; }
-            public override void Write(byte[] buffer, int offset, int count) { return; }
-        }
-
         const float ConfidenceThreshold = 0.7f;
 
         static readonly CultureInfo culture = new CultureInfo("en-US");
 
-        bool running = false;
-
-        public Task RecognizeAsync(InputStream audio, Action OnRecognized)
+        public async Task RecognizeAsync(InputStream audio, CancellationToken cancellationToken, Action OnRecognized)
         {
-            //TODO: Read more frames.
-            using (var recognizer = new SpeechRecognitionEngine(culture))
+            var buffer = new byte[40 * 3840];
+            int total = 0;
+            int count = 0;
+            while ((count = await audio.ReadAsync(buffer, total, buffer.Length)) > 0 && !cancellationToken.IsCancellationRequested)
             {
-                running = true;
+                total += count;
+                if (total < buffer.Length)
+                    continue;
+                total = 0;
 
-                var wrapper = new DiscordStreamWrapper(audio);
-
-                var gb = new GrammarBuilder("run") { Culture = culture };
-                recognizer.LoadGrammar(new Grammar(gb));
-                recognizer.SetInputToAudioStream(wrapper, new SpeechAudioFormatInfo(48000, AudioBitsPerSample.Sixteen, AudioChannel.Stereo));
-                recognizer.SpeechRecognized += (obj, args) =>
+                using (var mem = new MemoryStream(buffer))
+                using (var recognizer = new SpeechRecognitionEngine(culture))
                 {
-                    if (!running)
-                        return;
-                    if (args.Result.Confidence < ConfidenceThreshold)
-                        return;
-                    running = false;
-                    recognizer.RecognizeAsyncStop();
-                    OnRecognized();
-                };
-                recognizer.RecognizeAsync(RecognizeMode.Multiple);
-                //if (recognizer.Recognize() == null)
-                //{
-                //    running = false;
-                //    throw new Exception("Recognizer not supported.");
-                //}
-                bool finished = false;
-                recognizer.RecognizeCompleted += (obj, args) => finished = true;
-                while (!finished) { Thread.Sleep(100); }
-                return Task.CompletedTask;
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var gb = new GrammarBuilder("run") { Culture = culture };
+                    recognizer.LoadGrammar(new Grammar(gb));
+                    recognizer.SetInputToAudioStream(mem, new SpeechAudioFormatInfo(48000, AudioBitsPerSample.Sixteen, AudioChannel.Stereo));
+                    recognizer.SpeechRecognized += (obj, args) =>
+                    {
+                        if (args.Result.Confidence < ConfidenceThreshold)
+                            return;
+                        recognizer.RecognizeAsyncStop();
+                        OnRecognized();
+                    };
+                    recognizer.RecognizeAsync(RecognizeMode.Single);
+
+                    bool finished = false;
+                    recognizer.RecognizeCompleted += (obj, args) => finished = true;
+                    while (!finished && !cancellationToken.IsCancellationRequested) { Thread.Sleep(333); }
+                }
             }
         }
-
-        public void Stop() => running = false;
     }
 }

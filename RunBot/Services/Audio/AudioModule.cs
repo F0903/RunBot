@@ -12,6 +12,7 @@ namespace RunBot.Services.Audio
     {
         public override void Load()
         {
+            Kernel.Bind<IAudioProvider>().To<BasicAudioProvider>();
             Kernel.Bind<IAudioProvider>().To<StandardAudioProvider>();
         }
     }

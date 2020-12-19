@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using Ninject.Parameters;
-
 using RunBot.Services.Logging;
 
 namespace RunBot

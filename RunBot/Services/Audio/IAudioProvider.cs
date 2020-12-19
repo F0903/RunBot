@@ -10,8 +10,10 @@ namespace RunBot.Services.Audio
 {
     public interface IAudioProvider
     {
-        void SetOutput(ClientChannelPair output);
+        void SetOutput(IAudioClient output);
 
-        Task PlayFile(string path);
+        Task PlayFileAsync(string path);
+        Task PlayRawFileAsync(string path);
+        Task PlaySilenceAsync(int seconds);
     }
 }

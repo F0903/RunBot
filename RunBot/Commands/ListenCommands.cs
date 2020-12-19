@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
 
+using RunBot.Services.Audio;
 using RunBot.Services.Listening;
 using RunBot.Services.VoiceRecognition;
 
@@ -33,7 +34,12 @@ namespace RunBot.Commands
             var voiceChannel = user.VoiceChannel;
             var audioClient = await voiceChannel.ConnectAsync();
             listener.SetInputClient(audioClient);
-            await listener.ListenAsync(() => ReplyAsync("I recognized 'run'!"));
+            await listener.ListenAsync(async () => 
+            {
+                var player = new BasicAudioProvider();
+                player.SetOutput(audioClient);
+                await player.PlayRawFileAsync("media/run.pcm");
+            });
         }
     }
 }

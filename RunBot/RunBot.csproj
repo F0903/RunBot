@@ -85,13 +85,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PathUtils.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Bot.cs" />
     <Compile Include="Services\AudioProcessing\AudioProcessingModule.cs" />
     <Compile Include="Services\AudioProcessing\FFmpegAudioProcessor.cs" />
     <Compile Include="Services\AudioProcessing\IAudioProcessor.cs" />
     <Compile Include="Services\Audio\AudioModule.cs" />
+    <Compile Include="Services\Audio\AudioProvider.cs" />
+    <Compile Include="Services\Audio\BasicAudioProvider.cs" />
     <Compile Include="Services\Audio\IAudioProvider.cs" />
     <Compile Include="Services\Audio\StandardAudioProvider.cs" />
     <Compile Include="Settings.cs" />
@@ -123,7 +124,9 @@
     <Content Include="libsodium.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="media\run.pcm" />
+    <None Include="media\run.pcm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="ffmpeg.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
