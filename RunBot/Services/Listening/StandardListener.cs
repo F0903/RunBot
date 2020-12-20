@@ -49,7 +49,7 @@ namespace RunBot.Services
             {
                 using (stream)
                 {
-                    var recognizer = new AsyncVoiceRecognizer(cancellationTokenSource.Token);
+                    var recognizer = new SAPIVoiceRecognizer(cancellationTokenSource.Token);
                     recognizer.RecognizeAsync("run", (InputStream)stream, onRecognizedSpeech).Wait();
                 }
             });

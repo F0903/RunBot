@@ -12,7 +12,7 @@ namespace RunBot.Services.VoiceRecognition
     {
         public override void Load()
         {
-            Kernel.Bind<IVoiceRecognizer>().To<AsyncVoiceRecognizer>();
+            Kernel.Bind<IVoiceRecognizer>().To<SAPIVoiceRecognizer>();
         }
     }
 }

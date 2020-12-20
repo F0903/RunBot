@@ -75,20 +75,20 @@ namespace RunBot.Services.VoiceRecognition
         public override void Write(byte[] buffer, int offset, int count) => throw new NotImplementedException();
     }
 
-    public class AsyncVoiceRecognizer : IVoiceRecognizer
+    public class SAPIVoiceRecognizer : IVoiceRecognizer
     {
-        public AsyncVoiceRecognizer(CancellationToken cancellationToken)
+        public SAPIVoiceRecognizer(CancellationToken cancellationToken)
         {
             this.cancellationToken = cancellationToken;
         }
 
-        const float ConfidenceThreshold = 0.55f;
+        const float ConfidenceThreshold = 0.25f;
 
         static readonly CultureInfo culture = new CultureInfo("en-US");
 
         CancellationToken cancellationToken;
 
-        public async Task RecognizeAsync(string textToRecognize, InputStream audio, Action OnRecognized)
+        public async Task RecognizeAsync(string textToRecognize, InputStream audio, Action onRecognized)
         {
             using (var stream = new InputStreamWrapper(audio, cancellationToken))
             using (var speech = new SpeechRecognitionEngine(culture)
@@ -106,17 +106,32 @@ namespace RunBot.Services.VoiceRecognition
                 speech.LoadGrammar(new Grammar(gb));
 
                 bool finished = false;
-                speech.SpeechRecognized += (obj, args) =>
+
+                void OnRecognized()
                 {
-                    if (args.Result == null || args.Result.Confidence < ConfidenceThreshold)
-                        return;
-                    OnRecognized();
                     if (cancellationToken.IsCancellationRequested)
                     {
                         speech.RecognizeAsyncStop();
                         finished = true;
                     }
+                    onRecognized();  
+                }
+
+                speech.SpeechRecognitionRejected += (obj, args) =>
+                {
+                    if (args.Result == null)
+                        return;
+                    if (!(args.Result.Text == textToRecognize && args.Result.Confidence > ConfidenceThreshold))
+                        return;
+                    OnRecognized();
                 };
+                speech.SpeechRecognized += (obj, args) =>
+                {
+                    if (args.Result == null || args.Result.Confidence < ConfidenceThreshold)
+                        return;
+                    OnRecognized();
+                };
+
                 speech.RecognizeAsync(RecognizeMode.Multiple);
                 await Task.Run(() => { while (!finished) { Thread.Sleep(100); } }).ConfigureAwait(false);
             }

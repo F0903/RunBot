@@ -103,7 +103,7 @@
     <Compile Include="Services\Logging\StandardLogger.cs" />
     <Compile Include="Services\Logging\LoggingModule.cs" />
     <Compile Include="Services\VoiceRecognition\IVoiceRecognizer.cs" />
-    <Compile Include="Services\VoiceRecognition\AsyncVoiceRecognizer.cs" />
+    <Compile Include="Services\VoiceRecognition\SAPIVoiceRecognizer.cs" />
     <Compile Include="Services\VoiceRecognition\VoiceRecognitionModule.cs" />
     <Compile Include="IoC\Kernel.cs" />
     <Compile Include="Commands\ListenCommands.cs" />
