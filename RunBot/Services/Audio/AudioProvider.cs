@@ -22,7 +22,7 @@ namespace RunBot.Services.Audio
             return output.CreatePCMStream(AudioApplication.Music, 96 * 1024, 10, 0);
         }
 
-        public Task PlaySilenceAsync(int seconds)
+        public async Task PlaySilenceAsync(int seconds)
         {
             using (var output = CreateOutput())
             {
@@ -33,8 +33,8 @@ namespace RunBot.Services.Audio
                 {
                     output.WriteByte(0);
                 }
+                await output.FlushAsync().ConfigureAwait(false);
             }
-            return Task.CompletedTask;
         }
 
         public abstract Task PlayRawFileAsync(string path);

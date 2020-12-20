@@ -47,14 +47,16 @@ namespace RunBot.Services
             var streams = inputClient.GetStreams().Values;
             Parallel.ForEach(streams, stream =>
             {
-                var recognizer = new AsyncVoiceRecognizer();
-                recognizer.RecognizeAsync((InputStream)stream, cancellationTokenSource.Token, onRecognizedSpeech).Wait();
-                stream.Dispose();
+                using (stream)
+                {
+                    var recognizer = new AsyncVoiceRecognizer(cancellationTokenSource.Token);
+                    recognizer.RecognizeAsync("run", (InputStream)stream, onRecognizedSpeech).Wait();
+                }
             });
         }
 
-        public void Stop() 
-        { 
+        public void Stop()
+        {
             cancellationTokenSource?.Cancel();
             inputClient?.StopAsync();
             inputClient?.Dispose();

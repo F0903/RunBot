@@ -11,6 +11,6 @@ namespace RunBot.Services.VoiceRecognition
 {
     public interface IVoiceRecognizer
     {
-        Task RecognizeAsync(InputStream audio, CancellationToken cancellationToken, Action onRecognized);
+        Task RecognizeAsync(string textToRecognize, InputStream audio, Action onRecognized);
     }
 }

@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 
@@ -25,13 +26,18 @@ namespace RunBot.Commands
         [Command("Listen", RunMode = RunMode.Async)]
         public async Task Listen()
         {
-            if (!(Context.User is SocketGuildUser user))
+            if (!(Context.User is IGuildUser user))
             {
-                await ReplyAsync("Not socket guild user.");
+                await ReplyAsync("Not a guild user.");
                 return;
             }
-
+            
             var voiceChannel = user.VoiceChannel;
+            if(voiceChannel == null)
+            {
+                await ReplyAsync("Please connect to a voice channel.");
+                return;
+            }
             var audioClient = await voiceChannel.ConnectAsync();
             listener.SetInputClient(audioClient);
             await listener.ListenAsync(async () => 
@@ -40,6 +46,13 @@ namespace RunBot.Commands
                 player.SetOutput(audioClient);
                 await player.PlayRawFileAsync("media/run.pcm");
             });
+        }
+
+        [Command("Stop")]
+        public Task StopListen()
+        {
+            listener.Stop();
+            return Task.CompletedTask;
         }
     }
 }

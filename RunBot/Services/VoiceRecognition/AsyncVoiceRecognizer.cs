@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
+using System.Security.Cryptography;
 using System.Speech.AudioFormat;
 using System.Speech.Recognition;
 using System.Speech.Synthesis;
@@ -15,44 +16,109 @@ using Discord.Audio.Streams;
 
 namespace RunBot.Services.VoiceRecognition
 {
+    class InputStreamWrapper : Stream
+    {
+        public InputStreamWrapper(InputStream stream, CancellationToken cancellationToken)
+        {
+            this.stream = stream;
+            this.cancellationToken = cancellationToken;
+        }
+
+        readonly InputStream stream;
+        readonly CancellationToken cancellationToken;
+
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => long.MaxValue;
+
+        public override long Position { get => 0; set { } }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            byte lastByte = 0;
+            int total = 0;
+            while (total < count)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return 0;
+
+                if (!stream.TryReadFrame(cancellationToken, out var frame))
+                {
+                    if (lastByte <= byte.MinValue)
+                    {
+                        const int sampleSize = 2 * 2;
+                        for (int i = total; i < total + sampleSize; i++)
+                        {
+                            buffer[i] = 0;
+                        }
+                        total += sampleSize;
+                    }
+                    continue;
+                }
+
+                var payload = frame.Payload;
+                var writeCount = Math.Min(payload.Length, buffer.Length - total);
+                Buffer.BlockCopy(payload, 0, buffer, total, writeCount);
+                lastByte = payload[payload.Length - 1];
+                total += writeCount;
+            }
+            return count;
+        }
+
+        public override void Flush() { return; }
+        public override long Seek(long offset, SeekOrigin origin) => 0;
+        public override void SetLength(long value) { return; }
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotImplementedException();
+    }
+
     public class AsyncVoiceRecognizer : IVoiceRecognizer
     {
-        const float ConfidenceThreshold = 0.7f;
+        public AsyncVoiceRecognizer(CancellationToken cancellationToken)
+        {
+            this.cancellationToken = cancellationToken;
+        }
+
+        const float ConfidenceThreshold = 0.55f;
 
         static readonly CultureInfo culture = new CultureInfo("en-US");
 
-        public async Task RecognizeAsync(InputStream audio, CancellationToken cancellationToken, Action OnRecognized)
+        CancellationToken cancellationToken;
+
+        public async Task RecognizeAsync(string textToRecognize, InputStream audio, Action OnRecognized)
         {
-            var buffer = new byte[40 * 3840];
-            int total = 0;
-            int count = 0;
-            while ((count = await audio.ReadAsync(buffer, total, buffer.Length)) > 0 && !cancellationToken.IsCancellationRequested)
+            using (var stream = new InputStreamWrapper(audio, cancellationToken))
+            using (var speech = new SpeechRecognitionEngine(culture)
             {
-                total += count;
-                if (total < buffer.Length)
-                    continue;
-                total = 0;
-
-                using (var mem = new MemoryStream(buffer))
-                using (var recognizer = new SpeechRecognitionEngine(culture))
+                InitialSilenceTimeout = TimeSpan.Zero,
+                EndSilenceTimeout = TimeSpan.Zero,
+                EndSilenceTimeoutAmbiguous = TimeSpan.Zero
+            })
+            {
+                var gb = new GrammarBuilder(textToRecognize)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    var gb = new GrammarBuilder("run") { Culture = culture };
-                    recognizer.LoadGrammar(new Grammar(gb));
-                    recognizer.SetInputToAudioStream(mem, new SpeechAudioFormatInfo(48000, AudioBitsPerSample.Sixteen, AudioChannel.Stereo));
-                    recognizer.SpeechRecognized += (obj, args) =>
-                    {
-                        if (args.Result.Confidence < ConfidenceThreshold)
-                            return;
-                        recognizer.RecognizeAsyncStop();
-                        OnRecognized();
-                    };
-                    recognizer.RecognizeAsync(RecognizeMode.Single);
+                    Culture = culture
+                };
+                speech.SetInputToAudioStream(stream, new SpeechAudioFormatInfo(48000, AudioBitsPerSample.Sixteen, AudioChannel.Stereo));
+                speech.LoadGrammar(new Grammar(gb));
 
-                    bool finished = false;
-                    recognizer.RecognizeCompleted += (obj, args) => finished = true;
-                    while (!finished && !cancellationToken.IsCancellationRequested) { Thread.Sleep(333); }
-                }
+                bool finished = false;
+                speech.SpeechRecognized += (obj, args) =>
+                {
+                    if (args.Result == null || args.Result.Confidence < ConfidenceThreshold)
+                        return;
+                    OnRecognized();
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        speech.RecognizeAsyncStop();
+                        finished = true;
+                    }
+                };
+                speech.RecognizeAsync(RecognizeMode.Multiple);
+                await Task.Run(() => { while (!finished) { Thread.Sleep(100); } }).ConfigureAwait(false);
             }
         }
     }
