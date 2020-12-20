@@ -42,7 +42,7 @@ namespace RunBot.Commands
             listener.SetInputClient(audioClient);
             await listener.ListenAsync(async () => 
             {
-                var player = new BasicAudioProvider();
+                var player = new RawAudioPlayer();
                 player.SetOutput(audioClient);
                 await player.PlayRawFileAsync("media/run.pcm");
             });

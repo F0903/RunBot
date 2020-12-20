@@ -17,9 +17,9 @@ namespace RunBot.Services.Audio
     /// <summary>
     /// Provides the option for audio conversion.
     /// </summary>
-    public class StandardAudioProvider : AudioProvider, IAudioProvider
+    public class StandardAudioPlayer : BaseAudioPlayer
     {
-        public StandardAudioProvider(IAudioProcessor processor) 
+        public StandardAudioPlayer(IAudioProcessor processor) 
         {
             this.processor = processor;
         }

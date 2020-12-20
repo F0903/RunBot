@@ -9,7 +9,7 @@ using Discord.Audio;
 
 namespace RunBot.Services.Audio
 {
-    public abstract class AudioProvider : IAudioProvider
+    public abstract class BaseAudioPlayer : IAudioPlayer
     {
         IAudioClient output;
 

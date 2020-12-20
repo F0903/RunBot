@@ -19,12 +19,12 @@ namespace RunBot.Services
     public class StandardListener : IListener
     {
         //TODO: Fix strange error with Ninject when using IAudioProvider here.
-        public StandardListener(BasicAudioProvider audio)
+        public StandardListener(RawAudioPlayer audio)
         {
             this.audio = audio;
         }
 
-        readonly IAudioProvider audio;
+        readonly IAudioPlayer audio;
 
         CancellationTokenSource cancellationTokenSource;
 

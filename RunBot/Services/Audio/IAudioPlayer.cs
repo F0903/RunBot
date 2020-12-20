@@ -8,7 +8,7 @@ using Discord.Audio;
 
 namespace RunBot.Services.Audio
 {
-    public interface IAudioProvider
+    public interface IAudioPlayer
     {
         void SetOutput(IAudioClient output);
 

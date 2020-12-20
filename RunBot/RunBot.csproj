@@ -91,10 +91,10 @@
     <Compile Include="Services\AudioProcessing\FFmpegAudioProcessor.cs" />
     <Compile Include="Services\AudioProcessing\IAudioProcessor.cs" />
     <Compile Include="Services\Audio\AudioModule.cs" />
-    <Compile Include="Services\Audio\AudioProvider.cs" />
-    <Compile Include="Services\Audio\BasicAudioProvider.cs" />
-    <Compile Include="Services\Audio\IAudioProvider.cs" />
-    <Compile Include="Services\Audio\StandardAudioProvider.cs" />
+    <Compile Include="Services\Audio\BaseAudioPlayer.cs" />
+    <Compile Include="Services\Audio\RawAudioPlayer.cs" />
+    <Compile Include="Services\Audio\IAudioPlayer.cs" />
+    <Compile Include="Services\Audio\StandardAudioPlayer.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Services\Listening\IListener.cs" />
     <Compile Include="Services\Listening\StandardListener.cs" />

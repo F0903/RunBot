@@ -12,7 +12,7 @@ namespace RunBot.Services.Audio
     /// <summary>
     /// Only supports s16le
     /// </summary>
-    public class BasicAudioProvider : AudioProvider, IAudioProvider
+    public class RawAudioPlayer : BaseAudioPlayer
     {
         public override Task PlayFileAsync(string path) => PlayRawFileAsync(path);
 
